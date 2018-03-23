@@ -10,10 +10,6 @@ import os
 import re
 import sqlite3
 import argparse
-import pdb
-
-# 3rd party libs
-#import yaml
 
 def main():
   args = _parse_args()
@@ -86,7 +82,6 @@ def get_table(database_connection, data_format):
   Returns the table associated with the file format. Creates it if necessary.
   '''
 
-  pdb.set_trace()
   cursor = database_connection.cursor()
   table_names = [result[0] for result in cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")]
   if data_format['name'] not in table_names:
@@ -110,11 +105,6 @@ def insert_data(database_connection, data_format, data_file, table):
     command = "INSERT INTO '{}' VALUES ({})".format(data_format['name'], ', '.join(columns))
     cursor.execute(command)
     database_connection.commit()
-    #  "INSERT INTO '{}' VALUES ({})".format(
-    #    data_format['name'],
-    #    ', '.join(columns)
-    #  )
-    #)
 
 def split_row(data_format, row):
   '''
@@ -140,11 +130,6 @@ def get_db_connection(db_path):
   '''
 
   return sqlite3.connect(db_path)  
-
-def _parse_config(config_file):
-  with open(config_file, 'r') as f:
-    config = yaml.load(f)
-  return config
 
 def _parse_args():
   parser = argparse.ArgumentParser(
