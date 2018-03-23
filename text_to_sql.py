@@ -9,29 +9,34 @@ format in `.csv` files in `./spec`.
 import os
 import re
 import sqlite3
+import argparse
+import pdb
 
 # 3rd party libs
 #import yaml
 
 def main():
-  #config = parse_config()
-  #conn = get_db_connection(config['sqlite3_db'])
-  conn = get_db_connection('text_to_sql.sqlite3')
+  args = _parse_args()
+  conn = get_db_connection(args.connection)
+  get_spec_files = get_files_from_directory(args.spec_dir, '\.csv$')
   for spec_file in get_spec_files():
-    data_format = get_data_format(spec_file)
+    data_format = get_data_format('{}/{}'.format(args.spec_dir, spec_file))
     table = get_table(conn, data_format)
     get_data_files = get_files_from_directory(
-      './data',
+      args.data_dir,
       '{}.*\.txt$'.format(data_format['name'])
     )
     for data_file in get_data_files():
-      insert_data(conn, data_format, data_file, table)
+      insert_data(
+        conn, data_format, '{}/{}'.format(args.data_dir, data_file), table
+      )
 
 def get_files_from_directory(directory, pattern):
   '''
   Returns a function the gets files from the specified directory which match
   the specified pattern.
   '''
+
   def wrapper():
     files = []
     for file_name in os.listdir(directory):
@@ -40,8 +45,6 @@ def get_files_from_directory(directory, pattern):
     return files
   return wrapper
 
-get_spec_files = get_files_from_directory('./spec', '\.csv$')
-#get_data_files = get_files_from_directory('./data', '\.txt$')
 
 def get_data_format(spec_file):
   '''
@@ -63,10 +66,10 @@ def get_data_format(spec_file):
 
 
   data_format = {}
-  data_format['name'] = spec_file.replace('.csv', '')
+  data_format['name'] = os.path.basename(spec_file).replace('.csv', '')
   data_format['columns'] = []
 
-  with open('./spec/{}'.format(spec_file), 'r') as f:
+  with open(spec_file, 'r') as f:
     lines = f.readlines()
   for line in lines[1:]:  # The first line is just titles
     name, width, _type = line.rstrip('\n').split(',')
@@ -83,6 +86,7 @@ def get_table(database_connection, data_format):
   Returns the table associated with the file format. Creates it if necessary.
   '''
 
+  pdb.set_trace()
   cursor = database_connection.cursor()
   table_names = [result[0] for result in cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")]
   if data_format['name'] not in table_names:
@@ -99,7 +103,7 @@ def insert_data(database_connection, data_format, data_file, table):
   '''
 
   cursor = database_connection.cursor()  
-  with open('./data/{}'.format(data_file), 'r') as f:
+  with open(data_file, 'r') as f:
     rows= f.readlines()
   for row in rows:
     columns = split_row(data_format, row)
@@ -121,7 +125,7 @@ def split_row(data_format, row):
   for column in data_format['columns']:
     width = int(column['width'])
 
-    value = row[:width]
+    value = row[:width].strip()
     row = row[width:]
 
     if column['type'] == 'TEXT':
@@ -142,19 +146,27 @@ def _parse_config(config_file):
     config = yaml.load(f)
   return config
 
-class DataFormat(object):
-  '''
-  A data format object contains a name and a list of columns generated from a
-  spec file
-  '''
+def _parse_args():
+  parser = argparse.ArgumentParser(
+    description='Insert data from text files into a SQLite3 DB'
+  )
+  parser.add_argument(
+    '-c', '--connection', dest="connection",
+    default='text_to_sql.sqlite3',
+    help='Database connection string'
+  )
+  parser.add_argument(
+    '-s', '--spec_dir', dest="spec_dir",
+    default='./spec',
+    help='Directory for DB specification CSV files'
+  )
+  parser.add_argument(
+    '-d', '--data_dir', dest="data_dir",
+    default='./data',
+    help='Directory for data files'
+  )
 
-  def __init__(self, spec_file):
-    self.spec_file = spec_file
-    self.name = spec_file.replace('.csv', '')
-
-  @property
-  def columns(self):
-    pass
-
+  return parser.parse_args()
+  
 if __name__ == '__main__':
   main()
