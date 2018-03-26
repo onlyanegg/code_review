@@ -1,16 +1,19 @@
 Description:
 ----
 
-Run text\_to\_sql.py to store data from the `./data` directory into a sqlite3
-database.
+An application which stores data contained in text files into a sqlite3 database
 
-Files:
+Run `text_to_sql/text_to_sql.py` to run the application.
+
+Contents:
 ----
 
-- text\_to\_sql.py:
-    - The main application. Retrieves data from text files in the `./data`
-      directory and stores it in a sqlite3 DB in the format specified by the
-      related CSV file in `./spec`
-- test\_text\_to\_sql.py:
-    - Runs a single integration test which checks that the names inserted into
-      the database match their expected values.
+- `./text_to_sql`:
+    - Contains the main application
+- `./spec`:
+    - Contains data format files
+- `./data`:
+    - Contains data files
+- `./test`:
+    - Contains unit tests for some classes as well as an integration test
+    - Contains test data and spec directories for use with the tests
