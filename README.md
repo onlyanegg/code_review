@@ -1,7 +1,7 @@
 Description:
 ----
 
-An application which stores data contained in text files into a sqlite3 database
+An application which stores data from text files into a sqlite3 database
 
 Run `text_to_sql/text_to_sql.py` to run the application.
 
